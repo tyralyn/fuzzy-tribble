@@ -51,23 +51,30 @@ int main(int argc, char *argv[])
     printP2(f,d,x,m,w,instnum++);
     *w=*m; *m=*x; *x=*d; *d=*f;
 
+    printf("drs: %d drt %d drd %d | xrs: %d xrt %d xrd %d | mrs: %d mrt %d mrd %d\n", d->fields.rs, d->fields.rt, d->fields.rd, x->fields.rs, x->fields.rt, x->fields.rd, m->fields.rs, m->fields.rt, m->fields.rd);      
     int forwardA, forwardB;
     //x hazard: u r in decode and u need sumthing in execute
-    if (x->signals.rw == 1 && x->fields.rd != -1 && x->fields.rd == d->fields.rs) {
+    if (x->signals.rw == 1 && x->fields.rd != 0 && x->fields.rd == d->fields.rs) {
       forwardA = 2;
+      printf("x hazard a: rd: %d rs = %d \n", x->fields.rd, d->fields.rs);
     } 
-    if (x->signals.rw == 1 && x->fields.rd != -1 && x->fields.rd == d->fields.rt) {
+    if (x->signals.rw == 1 && x->fields.rd != 0 && x->fields.rd == d->fields.rt) {
       forwardB = 2;
+      printf("x hazard b: rd: %d rt = %d \n", x->fields.rd, d->fields.rt);
     } 
    
   //m hazard: u r in decode and you need somethng in memory
-    if (m->signals.rw == 1 && (m->fields.rd != -1) && !(x ->signals.rw == 1 && ( x->fields.rd != -1 )) && (x->fields.rd != d->fields.rs) &&  (m->fields.rd == d->fields.rs ))  {
+    if (m->signals.rw == 1 && (m->fields.rd != 0) && !(x ->signals.rw == 1 && ( x->fields.rd != 0 )) && (x->fields.rd != d->fields.rs) &&  (m->fields.rd == d->fields.rs ))  {
       forwardA = 1;
+      printf("m hazard a: rd: %d rs = %d \n", m->fields.rd, d->fields.rs);
     } 
 
-    if (m->signals.rw == 1 && (m->fields.rd != -1) && !(x ->signals.rw == 1 && ( x->fields.rd != -1 )) && (x->fields.rd != d->fields.rt) &&  (m->fields.rd == d->fields.rt ))  {
+    if (m->signals.rw == 1 && (m->fields.rd != 0) && !(x ->signals.rw == 1 && ( x->fields.rd != 0 )) && (x->fields.rd != d->fields.rt) &&  (m->fields.rd == d->fields.rt ))  {
       forwardB = 1;
+      printf("m hazard b: rd: %d rt = %d \n", m->fields.rd, d->fields.rt);
     } 
+
+    
 
     if (i <= maxpc) {
       fetch(f);
