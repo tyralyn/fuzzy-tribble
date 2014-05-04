@@ -40,42 +40,95 @@ int main(int argc, char *argv[])
   fetch(f);
   decode(f);
   i = 0;
+
+    
   while (i<=maxpc+4) {
 
     i++;
-    decode(d);
-    execute(x);
-    memory(m);
+    //decode(d);
+    // execute(x);
+    //memory(m);
     writeback(w); 
+    memory(m);
+    int k;
+    int memoryOutput;
+    if (m->signals.rw != 0) {
+      switch(m->signals.rdst) {
+      case 0:
+	k = regfile[m->targetreg];
+	break;
+      case 1:
+	k = regfile[m->destreg];
+	break;
+      case 2:
+	k = regfile[31];
+	break;
+      default:
+	break;
+      }
+    }
+    memoryOutput = k;
+    execute(x);
+    int executeOutput = x->aluout;
+    decode(d);
+    int decodeOutput1=d->s1data;
+    int decodeOutput2=d->s2data;
     setPCWithInfo(w);  
     printP2(f,d,x,m,w,instnum++);
-    *w=*m; *m=*x; *x=*d; *d=*f;
-
-    printf("drs: %d drt %d drd %d | xrs: %d xrt %d xrd %d | mrs: %d mrt %d mrd %d\n", d->fields.rs, d->fields.rt, d->fields.rd, x->fields.rs, x->fields.rt, x->fields.rd, m->fields.rs, m->fields.rt, m->fields.rd);      
-    int forwardA, forwardB;
-    //x hazard: u r in decode and u need sumthing in execute
-    if (x->signals.rw == 1 && x->fields.rd != 0 && x->fields.rd == d->fields.rs) {
+    
+    int aluInput1, aluInput2;
+    int forwardA = 0, forwardB = 0;
+    if (x->signals.rw == 1 && x->fields.rd != -1 && x->fields.rd == d->fields.rs) {
       forwardA = 2;
-      printf("x hazard a: rd: %d rs = %d \n", x->fields.rd, d->fields.rs);
     } 
-    if (x->signals.rw == 1 && x->fields.rd != 0 && x->fields.rd == d->fields.rt) {
+    if (x->signals.rw == 1 && x->fields.rd != -1 && x->fields.rd == d->fields.rt) {
       forwardB = 2;
-      printf("x hazard b: rd: %d rt = %d \n", x->fields.rd, d->fields.rt);
     } 
    
   //m hazard: u r in decode and you need somethng in memory
-    if (m->signals.rw == 1 && (m->fields.rd != 0) && !(x ->signals.rw == 1 && ( x->fields.rd != 0 )) && (x->fields.rd != d->fields.rs) &&  (m->fields.rd == d->fields.rs ))  {
+    if (m->signals.rw == 1 && (m->fields.rd != -1) && !(x ->signals.rw == 1 && ( x->fields.rd != -1 )) && (x->fields.rd != d->fields.rs) &&  (m->fields.rd == d->fields.rs ))  {
       forwardA = 1;
-      printf("m hazard a: rd: %d rs = %d \n", m->fields.rd, d->fields.rs);
+      //printf("m hazard a: rd: %d rs = %d \n", m->fields.rd, d->fields.rs);
     } 
 
-    if (m->signals.rw == 1 && (m->fields.rd != 0) && !(x ->signals.rw == 1 && ( x->fields.rd != 0 )) && (x->fields.rd != d->fields.rt) &&  (m->fields.rd == d->fields.rt ))  {
+    if (m->signals.rw == 1 && (m->fields.rd != -1) && !(x ->signals.rw == 1 && ( x->fields.rd != -1 )) && (x->fields.rd != d->fields.rt) &&  (m->fields.rd == d->fields.rt ))  {
       forwardB = 1;
-      printf("m hazard b: rd: %d rt = %d \n", m->fields.rd, d->fields.rt);
-    } 
+      //printf("m hazard b: rd: %d rt = %d \n", m->fields.rd, d->fields.rt);
+    }
+    switch (forwardA) {
+    case 0:
+      aluInput1=decodeOutput1;
+      break;
+    case 1:
+      aluInput1=executeOutput;
+      break;
+    case 2:
+      aluInput1=memoryOutput;
+      break;
+    default:
+      break;
+    }
+
+    switch (forwardB) {
+    case 0:
+      aluInput2=decodeOutput1;
+      break;
+    case 1:
+      aluInput2=executeOutput;
+      break;
+    case 2:
+      aluInput2=memoryOutput;
+      break;
+    default:
+      break;
+    }
+    
+    d->input1=aluInput1;
+    d->input2=aluInput2;
+    *w=*m; *m=*x; *x=*d; *d=*f;
+
 
     
-
     if (i <= maxpc) {
       fetch(f);
       decode(f);

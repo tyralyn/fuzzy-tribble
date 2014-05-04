@@ -133,33 +133,32 @@ void decode(InstInfo *instruction)
       instruction->signals.rw=1;
       switch(instruction->fields.func) {
       case 40: //and
-	instruction->signals.aluop=2;
-	sprintf(instruction->string,"and $%d, $%d, $%d",
-		instruction->fields.rd, instruction->fields.rs, 
-		instruction->fields.rt);
-	instruction->destreg = instruction->fields.rd;
-	break;
+    instruction->signals.aluop=2;
+    sprintf(instruction->string,"and $%d, $%d, $%d",
+        instruction->fields.rd, instruction->fields.rs, 
+        instruction->fields.rt);
+    instruction->destreg = instruction->fields.rd;
+    break;
       case 24: //sub
-	instruction->signals.aluop=1;
-	sprintf(instruction->string,"sub $%d, $%d, $%d",
-		instruction->fields.rd, instruction->fields.rs, 
-		instruction->fields.rt);
-	instruction->destreg = instruction->fields.rd;
-	break;
+    instruction->signals.aluop=1;
+    sprintf(instruction->string,"sub $%d, $%d, $%d",
+        instruction->fields.rd, instruction->fields.rs, 
+        instruction->fields.rt);
+    instruction->destreg = instruction->fields.rd;
+    break;
       case 10: //sgt
-	instruction->signals.aluop=6;
-	sprintf(instruction->string,"sgt $%d, $%d, $%d",
-		instruction->fields.rd, instruction->fields.rs, 
-		instruction->fields.rt);
-	instruction->destreg = instruction->fields.rd;
-	break;
+    instruction->signals.aluop=6;
+    sprintf(instruction->string,"sgt $%d, $%d, $%d",
+        instruction->fields.rd, instruction->fields.rs, 
+        instruction->fields.rt);
+    instruction->destreg = instruction->fields.rd;
+    break;
       default:
-	//printf("wtf1 %d \n", func);
-	break;
+    //printf("wtf1 %d \n", func);
+    break;
       }
       break;
     case 41: //jr
-      // instruction->fields.rd = instruction->fields.rt = -1;
       instruction->signals.aluop=-1;
       instruction->signals.mw=0;
       instruction->signals.mtr=-1;
@@ -169,7 +168,7 @@ void decode(InstInfo *instruction)
       instruction->signals.rdst=-1;
       instruction->signals.rw=0;
       sprintf(instruction->string,"jr $%d",
-	      instruction->fields.rs);
+          instruction->fields.rs);
       instruction->destreg = instruction->fields.rd;
       break;
     default:
@@ -178,7 +177,6 @@ void decode(InstInfo *instruction)
     }
   }
   else if (op ==48 || op == 18 || op ==19 || op == 14) { //I-format
-    //instruction->fields.rd=-1;
     instruction->destreg=instruction->fields.rt;
     instruction->targetreg=instruction->fields.rt;
     instruction->sourcereg=instruction->fields.rs;
@@ -197,8 +195,8 @@ void decode(InstInfo *instruction)
       instruction->signals.rdst=0;
       instruction->signals.rw=1;
       sprintf(instruction->string,"addi $%d, $%d, %d",
-	      instruction->fields.rt, instruction->fields.rs, 
-	      instruction->fields.imm);
+          instruction->fields.rt, instruction->fields.rs, 
+          instruction->fields.imm);
       instruction->destreg = instruction->fields.rd;
       break;
     case 18: //lw
@@ -211,8 +209,8 @@ void decode(InstInfo *instruction)
       instruction->signals.rdst=0;
       instruction->signals.rw=1;
       sprintf(instruction->string,"lw $%d, %d($%d)",
-	      //c switched rs and rt
-	      instruction->fields.rt, instruction->fields.imm, instruction->fields.rs);
+          //c switched rs and rt
+          instruction->fields.rt, instruction->fields.imm, instruction->fields.rs);
       instruction->destreg = instruction->fields.rd;
       break;
     case 19: //sw
@@ -225,8 +223,8 @@ void decode(InstInfo *instruction)
       instruction->signals.rdst=-1;
       instruction->signals.rw=0;
       sprintf(instruction->string,"sw $%d,%d($%d)",
-	      instruction->fields.rt, instruction->fields.imm, 
-	      instruction->fields.rs);
+          instruction->fields.rt, instruction->fields.imm, 
+          instruction->fields.rs);
       instruction->destreg = instruction->fields.rd;
       break;
     case 14: //blt
@@ -239,8 +237,8 @@ void decode(InstInfo *instruction)
       instruction->signals.rdst=-1;
       instruction->signals.rw=0;
       sprintf(instruction->string,"blt $%d, $%d, %d",
-	      instruction->fields.rs, instruction->fields.rt, 
-	      instruction->fields.imm);
+          instruction->fields.rs, instruction->fields.rt, 
+          instruction->fields.imm);
       // instruction->destreg = instruction->fields.rd;
       instruction->input2=instruction->s2data;
       break;
@@ -248,14 +246,13 @@ void decode(InstInfo *instruction)
       break;
     }
   }
-  else if (op == 10) { //J-format
+  else if (op == 10) { //I-format
     int address;
     address = (val) & 0x3FFFFFF;
     // printf("J-items %d", address);
     instruction->fields.imm = testImm;//jalImm << 2;
     //switch(op) {
     // case 10: //jal
-    //instruction->fields.rs = instruction->fields.rt = instruction->fields.rd = -1;
     instruction->signals.aluop=-1;
     instruction->signals.mw=0;
     instruction->signals.mtr=2;
@@ -319,7 +316,7 @@ void memory(InstInfo *instruction)
   }
   switch(instruction->signals.mtr) {
   case(0):
-	instruction->destdata=instruction->aluout;// regfile[instruction->destreg]=instruction->aluout;
+    instruction->destdata=instruction->aluout;// regfile[instruction->destreg]=instruction->aluout;
     break;
   case(1):
     instruction->destdata=instruction->memout;
@@ -338,6 +335,7 @@ void memory(InstInfo *instruction)
  */
 void writeback(InstInfo *instruction)
 {
+  int k;
   //printf("writeback %d\n", instruction->inst);
   if (instruction->signals.rw==0)
     return;
