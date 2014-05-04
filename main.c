@@ -4,14 +4,18 @@
 #include "functions.h"
 
 void doStuff(InstInfo* f, InstInfo* d, InstInfo*x, InstInfo* m, InstInfo* w);
+int getRS(InstInfo* i) { return ( (i==NULL) ? -1 : i->fields.rs);  }
+int getRT(InstInfo* i) { return ( (i==NULL) ? -1 : i->fields.rt);  }
+int getRD(InstInfo* i) { return ( (i==NULL) ? -1 : i->fields.rd);  }
+
 int main(int argc, char *argv[])
 {
   
   InstInfo curInst;
-  InstInfo* instArray[4];
-  int top = 0;
+  //InstInfo* instArray[4];
+  //int top = 0;
   //  InstInfo *f = &curInst;
-   int instnum = 0;
+  int instnum = 0;
   int maxpc;
   FILE *program;
   int i;
@@ -26,41 +30,17 @@ int main(int argc, char *argv[])
     }
   
   maxpc = load(argv[1]) - 1;
-  InstInfo* n;
-  n= malloc(sizeof(*n));
-  InstInfo* f;
-  f=malloc(sizeof(*f));
-  InstInfo* d;
-  d=malloc(sizeof(*d));
-  InstInfo* x;
-  x=malloc(sizeof(*x));
-  InstInfo* m;
-  m=malloc(sizeof(*m));
-  InstInfo* w;
-  w=malloc(sizeof(*w));
+  InstInfo* n; n= malloc(sizeof(*n));
+  InstInfo* f; f=malloc(sizeof(*f));
+  InstInfo* d; d=malloc(sizeof(*d));
+  InstInfo* x; x=malloc(sizeof(*x));
+  InstInfo* m; m=malloc(sizeof(*m));
+  InstInfo* w; w=malloc(sizeof(*w));
   
   fetch(f);
   decode(f);
-  instArray[top]=f;
-  top++;
   i = 0;
   while (i<=maxpc+4) {
-    int j;
-    for (j=0; j<4; j++) {
-      //check to see if the rs is the destination of a  previous instruction in the array
-      if (f->fields.rs == instArray[j]->signals.rdst) {
-	//forwarding or something
-	int op = f->fields.op;
-	int func = f->fields.func;
-	//if ((op == 14)) {
-	  //check
-	//}
-      }
-      if ((f->fields.rt == instArray[j]->signals.rdst))  {
-	
-      } 
-    }
-    
 
     i++;
     decode(d);
@@ -69,27 +49,36 @@ int main(int argc, char *argv[])
     writeback(w); 
     setPCWithInfo(w);  
     printP2(f,d,x,m,w,instnum++);
-    *w=*m;
-    *m=*x;
-    *x=*d;
-    *d=*f;
+    *w=*m; *m=*x; *x=*d; *d=*f;
+
+    int forwardA, forwardB;
+    //x hazard: u r in decode and u need sumthing in execute
+    if (x->signals.rw == 1 && x->fields.rd != -1 && x->fields.rd == d->fields.rs) {
+      forwardA = 2;
+    } 
+    if (x->signals.rw == 1 && x->fields.rd != -1 && x->fields.rd == d->fields.rt) {
+      forwardB = 2;
+    } 
+   
+  //m hazard: u r in decode and you need somethng in memory
+    if (m->signals.rw == 1 && (m->fields.rd != -1) && !(x ->signals.rw == 1 && ( x->fields.rd != -1 )) && (x->fields.rd != d->fields.rs) &&  (m->fields.rd == d->fields.rs ))  {
+      forwardA = 1;
+    } 
+
+    if (m->signals.rw == 1 && (m->fields.rd != -1) && !(x ->signals.rw == 1 && ( x->fields.rd != -1 )) && (x->fields.rd != d->fields.rt) &&  (m->fields.rd == d->fields.rt ))  {
+      forwardB = 1;
+    } 
+
     if (i <= maxpc) {
       fetch(f);
       decode(f);
-      instArray[top]=f;
-      top=(top+1)%4;
     }
     else {
       *f = *n;
     }
   }
   printf("Cycles: %d\nInstructions Executed: %d\n", i, maxpc+1);
-  free(d);
-  free(x);
-  free(m);
-  free(w);
-  free(n);
-  free(f);
+  free(d);  free(x);  free(m);  free(w);  free(n); free(f);
   exit(0);
 }
 

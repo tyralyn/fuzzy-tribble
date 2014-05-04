@@ -159,6 +159,7 @@ void decode(InstInfo *instruction)
       }
       break;
     case 41: //jr
+      instruction->fields.rd = instruction->fields.rt = -1;
       instruction->signals.aluop=-1;
       instruction->signals.mw=0;
       instruction->signals.mtr=-1;
@@ -177,6 +178,7 @@ void decode(InstInfo *instruction)
     }
   }
   else if (op ==48 || op == 18 || op ==19 || op == 14) { //I-format
+    instruction->fields.rd=-1;
     instruction->destreg=instruction->fields.rt;
     instruction->targetreg=instruction->fields.rt;
     instruction->sourcereg=instruction->fields.rs;
@@ -246,13 +248,14 @@ void decode(InstInfo *instruction)
       break;
     }
   }
-  else if (op == 10) { //I-format
+  else if (op == 10) { //J-format
     int address;
     address = (val) & 0x3FFFFFF;
     // printf("J-items %d", address);
     instruction->fields.imm = testImm;//jalImm << 2;
     //switch(op) {
     // case 10: //jal
+    instruction->fields.rs = instruction->fields.rt = instruction->fields.rd = -1;
     instruction->signals.aluop=-1;
     instruction->signals.mw=0;
     instruction->signals.mtr=2;
