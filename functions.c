@@ -241,7 +241,13 @@ void decode(InstInfo *instruction)
           instruction->fields.imm);
       // instruction->destreg = instruction->fields.rd;
       instruction->input2=instruction->s2data;
-      break;
+
+	// changed condition to decode
+      if (instruction->input1 < instruction->input2)
+	instruction->aluout = 1;
+      else
+	instruction->aluout = 0;
+	break;
     default:
       break;
     }
@@ -281,24 +287,28 @@ void execute(InstInfo *instruction)
   switch(instruction->signals.aluop) {
   case 0: //addi, load word, save word
     k=i1+i2;
+    instruction->aluout=k;
     break;
   case 2: //and
     k=i1 & i2;
+    instruction->aluout=k;
     break;
   case 1: //sub
     k=i1-i2;
+    instruction->aluout=k;
     break;
   case 6: //sgt
     k=(i1>i2) ? 1 : 0;
+    instruction->aluout=k;
     break;
   case 7: //blt
-    k=(i1<i2) ? 1 : 0;
+    //k=(i1<i2) ? 1 : 0;
     break;
   default: //don't care for jal, jr
     break;
   }
   // printf("execute %d\n", instruction->inst);
-  instruction->aluout=k;
+  //instruction->aluout=k;
 }
 
 /* memory

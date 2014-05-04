@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
@@ -47,10 +48,46 @@ int main(int argc, char *argv[])
     writeback(w); 
     setPCWithInfo(w);  
     printP2(f,d,x,m,w,instnum++);
+    int memoryResult = w->destdata;
+    int executeResult=x->aluout;
+    int forwardA, forwardB;
+    int xRegWrite = x->signals.rw;
+    int mRegWrite = m->signals.rw;
+    int mrd = m->destreg;//fields.rd;
+    int xrd = x->destreg;//fields.rd;
+    int drs = d->fields.rs;
+    int drt = d->fields.rt;
+
+    if (xRegWrite == 1 && xrd != 0 && (xrd == drs)) { forwardA=2;/* printf("aluop from prev alu result\n");*/}
+    if (xRegWrite == 1 && xrd != 0 && (xrd == drt)) { forwardB=2;/* printf("aluop from prev alu result\n");*/}
+    if ((mRegWrite ==1 && mrd != 0 && !(xRegWrite == 1 && xrd!= 0 )) && xrd!=drs && 
+	(mrd == drs)){ forwardA=1; /*printf("aluop from prev mem result\n");*/}
+    if ((mRegWrite ==1 && mrd != 0 && !(xRegWrite == 1 && xrd!= 0 )) && xrd!=drt &&
+	(mrd == drt)){ forwardB=1; /*printf("aluop from prev mem result\n");*/}
+    printf("aluoutput %d\n", w->aluout);
+    switch (forwardA) {
+    case 1:
+      d->input1 = executeResult;
+      break;
+    case 2:
+      d->input1 = memoryResult;
+      break;
+    default:
+      break;
+    }
+
+    switch (forwardB) {
+    case 1:
+      d->input2 = executeResult;
+      break;
+    case 2:
+      d->input2 = memoryResult;
+      break;
+    default:
+      break;
+    }
+
     *w=*m; *m=*x; *x=*d; *d=*f;
-
-    
-
     if (i <= maxpc) {
       fetch(f);
       decode(f);
