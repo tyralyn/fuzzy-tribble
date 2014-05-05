@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
@@ -46,47 +45,88 @@ int main(int argc, char *argv[])
     execute(x);
     memory(m);
     writeback(w); 
-    setPCWithInfo(w);  
+    int F = (f==NULL) ? -1 : f->signals.rw;
+    //printf("%d, ", F);
+    int D = (d==NULL) ? -1 : d->signals.rw;
+    //printf("%d, ", D);
+    int X = (x==NULL) ? -1 : w->signals.rw;
+    //printf("%d, ", X);
+    int M = (m==NULL) ? -1 : m->signals.rw;
+    //printf("%d, ", M);
+    int W = (w==NULL) ? -1 : w->signals.rw;
+    //printf("%d, \n", W);
+    //printf("prelim\n");
+    //printf("F: %d D: %d X: %d M: %d W: %d \n", F, D, X, M, W);
+    // printf("m) rd: %d rs %d rt %d\n", m->fields.rd, m->fields.rs, m->fields.rt);
+    //printf("m) input1: %d input2: %d rt %d\n", m->input1, m->input2, m->fields.rt);
+    //setPCWithInfo(w);  
     printP2(f,d,x,m,w,instnum++);
-    int memoryResult = w->destdata;
+    int memoryResult = w->memout;
+    //printf("memoryResult %d, ", memoryResult);
     int executeResult=x->aluout;
-    int forwardA, forwardB;
+    //printf("executeResult %d, ", executeResult);
+    int forwardA=0, forwardB=0;
+    //printf("%d, ", F);
     int xRegWrite = x->signals.rw;
+    //printf("xRegWrite %d, ", xRegWrite);
     int mRegWrite = m->signals.rw;
+    //printf("mRegWrite%d, ", mRegWrite);
     int mrd = m->destreg;//fields.rd;
+    //printf("mrd %d, ", mrd);
     int xrd = x->destreg;//fields.rd;
-    int drs = d->fields.rs;
-    int drt = d->fields.rt;
-
-    if (xRegWrite == 1 && xrd != 0 && (xrd == drs)) { forwardA=2;/* printf("aluop from prev alu result\n");*/}
-    if (xRegWrite == 1 && xrd != 0 && (xrd == drt)) { forwardB=2;/* printf("aluop from prev alu result\n");*/}
-    if ((mRegWrite ==1 && mrd != 0 && !(xRegWrite == 1 && xrd!= 0 )) && xrd!=drs && 
-	(mrd == drs)){ forwardA=1; /*printf("aluop from prev mem result\n");*/}
-    if ((mRegWrite ==1 && mrd != 0 && !(xRegWrite == 1 && xrd!= 0 )) && xrd!=drt &&
-	(mrd == drt)){ forwardB=1; /*printf("aluop from prev mem result\n");*/}
-    printf("aluoutput %d\n", w->aluout);
+    //printf("xrd %d, ", xrd);
+    int drs = d->sourcereg;//fields.rs;
+    //printf("drs %d, ", drs);
+    int drt = d->targetreg;//fields.rt;
+    // printf("drt %d, ", drt);
+    printf("input1: %d, input2: %d,  aluout: %d, memout: %d\n", x->input1, x->input2, x->aluout, m->memout);
+    //printf("xRegWrite: %d mRegWrite: %d mrd: %d xrd: %d drs: %d drt: %d\n", xRegWrite);
+    printf("xRegWrite(%d) ==? 1 && xrd(%d) !=? 0 && (xrd(%d) ==? drs(%d))\n", xRegWrite, xrd, xrd, drs);
+    if (xRegWrite == 1 && xrd != 0 && (xrd == drs)) { 
+      forwardA=2; 
+      printf("aluop 1 from prev alu result\n!!!!");}
+    
+    printf("xRegWrite(%d) ==? 1 && xrd(%d) !=? 0 && (xrd(%d) ==? drt(%d))\n", xRegWrite, xrd, xrd, drt);
+    
+    if (xRegWrite == 1 && xrd != 0 && (xrd == drt)) { 
+      forwardB=2; 
+      printf("aluop 2 from prev alu result\n");}
+    
+    printf("(mRegWrite(%d) ==? 1 && mrd(%d) !=? 0 && !(xRegWrite(%d) ==? 1 && xrd(%d)!=? 0 )) && xrd(%d) != drs(%d) && (mrd(%d) ==? drs(%d))\n", mRegWrite, mrd, xRegWrite, xrd, xrd, drs, mrd, drs); 
+    if ((mRegWrite ==1 && mrd != 0 && !(xRegWrite == 1 && xrd!= 0 )) && xrd!=drs && (mrd == drs)){ forwardA=1; printf("aluop 1from prev mem result\n");}
+ 
+    printf("(mRegWrite(%d) ==? 1 && mrd(%d) !=? 0 && !(xRegWrite(%d) ==? 1 && xrd(%d)!=? 0 )) && xrd(%d) != drt(%d) && (mrd(%d) ==? drt(%d))\n", mRegWrite, mrd, xRegWrite, xrd, xrd, drt, mrd, drt); 
+    if ((mRegWrite ==1 && mrd != 0 && !(xRegWrite == 1 && xrd!= 0 )) && xrd!=drt && (mrd == drt)){ forwardB=1; printf("aluop 2 from prev mem result\n");}
+    printf("A %d, B %d \n", forwardA, forwardB);
     switch (forwardA) {
-    case 1:
-      d->input1 = executeResult;
-      break;
     case 2:
+      d->input1 = executeResult;
+      printf("input 1 is alu: %d \n", d->input1);
+      break;
+    case 1:
       d->input1 = memoryResult;
+      printf("input 1 is mem: %d \n", d->input1);
       break;
     default:
+      if (sourcereg > 0) { printf("source reg %d: %d\n", d->sourcereg, regfile[d->sourcereg]); }
+      printf("input 1 is reg %d: %d\n", d->sourcereg, d->s1data);
       break;
     }
 
     switch (forwardB) {
-    case 1:
-      d->input2 = executeResult;
-      break;
     case 2:
+      d->input2 = executeResult;
+      printf("input 2 is alu: %d \n",d->input2);
+      break;
+    case 1:
+      printf("input 2 is mem: %d\n",d->input2);
       d->input2 = memoryResult;
       break;
     default:
+      printf("input 2 is reg %d: %d\n", d->targetreg,d->s2data);
       break;
     }
-
+    //setPCWithInfo(w);
     *w=*m; *m=*x; *x=*d; *d=*f;
     if (i <= maxpc) {
       fetch(f);
@@ -95,6 +135,7 @@ int main(int argc, char *argv[])
     else {
       *f = *n;
     }
+    printf("-------------------------------------------\n");
   }
   printf("Cycles: %d\nInstructions Executed: %d\n", i, maxpc+1);
   free(d);  free(x);  free(m);  free(w);  free(n); free(f);
