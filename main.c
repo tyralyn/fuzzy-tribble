@@ -71,6 +71,8 @@ int main(int argc, char *argv[])
     //printf("xRegWrite %d, ", xRegWrite);
     int mRegWrite = m->signals.rw;
     //printf("mRegWrite%d, ", mRegWrite);
+    int wRegWrite = m->signals.rw;
+    int wrd = w->destreg;
     int mrd = m->destreg;//fields.rd;
     //printf("mrd %d, ", mrd);
     int xrd = x->destreg;//fields.rd;
@@ -79,55 +81,76 @@ int main(int argc, char *argv[])
     //printf("drs %d, ", drs);
     int drt = d->targetreg;//fields.rt;
     // printf("drt %d, ", drt);
-    printf("input1: %d, input2: %d,  aluout: %d, memout: %d\n", x->input1, x->input2, x->aluout, m->memout);
+    ////printf("input1: %d, input2: %d,  aluout: %d, memout: %d\n", x->input1, x->input2, x->aluout, m->memout);
     //printf("xRegWrite: %d mRegWrite: %d mrd: %d xrd: %d drs: %d drt: %d\n", xRegWrite);
-    printf("xRegWrite(%d) ==? 1 && xrd(%d) !=? 0 && (xrd(%d) ==? drs(%d))\n", xRegWrite, xrd, xrd, drs);
+    ////printf("xRegWrite(%d) ==? 1 && xrd(%d) !=? 0 && (xrd(%d) ==? drs(%d))\n", xRegWrite, xrd, xrd, drs);
     if (xRegWrite == 1 && xrd != 0 && (xrd == drs)) { 
-      forwardA=2; 
-      printf("aluop 1 from prev alu result\n!!!!");}
-    
-    printf("xRegWrite(%d) ==? 1 && xrd(%d) !=? 0 && (xrd(%d) ==? drt(%d))\n", xRegWrite, xrd, xrd, drt);
-    
+      forwardA=2; }
+    else {
+      if (mRegWrite == 1 && mrd !=0 && (mrd == drs)) {
+	forwardA= 1;
+      }
+      else {
+	if (wRegWrite == 1 && wrd !=0 && (wrd==drs)) {
+	  forwardA = 3;
+	}
+      }
+    }
+
     if (xRegWrite == 1 && xrd != 0 && (xrd == drt)) { 
-      forwardB=2; 
-      printf("aluop 2 from prev alu result\n");}
+      forwardB=2; }
+    else {
+      if (mRegWrite == 1 && mrd !=0 && (mrd == drt)) {
+	forwardB= 1;
+      }
+      else {
+	if (wRegWrite == 1 && wrd !=0 && (wrd==drt)) {
+	  forwardB = 3;
+	}
+      }
+    }
     
-    printf("(mRegWrite(%d) ==? 1 && mrd(%d) !=? 0 && !(xRegWrite(%d) ==? 1 && xrd(%d)!=? 0 )) && xrd(%d) != drs(%d) && (mrd(%d) ==? drs(%d))\n", mRegWrite, mrd, xRegWrite, xrd, xrd, drs, mrd, drs); 
-    if ((mRegWrite ==1 && mrd != 0 && !(xRegWrite == 1 && xrd!= 0 )) && xrd!=drs && (mrd == drs)){ forwardA=1; printf("aluop 1from prev mem result\n");}
- 
-    printf("(mRegWrite(%d) ==? 1 && mrd(%d) !=? 0 && !(xRegWrite(%d) ==? 1 && xrd(%d)!=? 0 )) && xrd(%d) != drt(%d) && (mrd(%d) ==? drt(%d))\n", mRegWrite, mrd, xRegWrite, xrd, xrd, drt, mrd, drt); 
-    if ((mRegWrite ==1 && mrd != 0 && !(xRegWrite == 1 && xrd!= 0 )) && xrd!=drt && (mrd == drt)){ forwardB=1; printf("aluop 2 from prev mem result\n");}
-    printf("A %d, B %d \n", forwardA, forwardB);
+    //printf("A %d, B %d \n", forwardA, forwardB);
     switch (forwardA) {
     case 2:
       d->input1 = executeResult;
-      printf("input 1 is alu: %d \n", d->input1);
+      //printf("input 1 is alu: %d \n", d->input1);
       break;
     case 1:
       d->input1 = memoryResult;
-      printf("input 1 is mem: %d \n", d->input1);
+      //printf("input 1 is mem: %d \n", d->input1);
+      break;
+    case 3:
+      d->input1 = w->destdata;
+      //printf("input 1 is wb: %d \n", d->input1);
       break;
     default:
-      if (sourcereg > 0) { printf("source reg %d: %d\n", d->sourcereg, regfile[d->sourcereg]); }
-      printf("input 1 is reg %d: %d\n", d->sourcereg, d->s1data);
+      // if (sourcereg > 0) { printf("source reg %d: %d\n", d->sourcereg, regfile[d->sourcereg]); }
+      //printf("input 1 is reg %d: %d\n", d->sourcereg, d->s1data);
       break;
     }
 
     switch (forwardB) {
     case 2:
       d->input2 = executeResult;
-      printf("input 2 is alu: %d \n",d->input2);
+      //printf("input 2 is alu: %d \n",d->input2);
       break;
     case 1:
-      printf("input 2 is mem: %d\n",d->input2);
+      //printf("input 2 is mem: %d\n",d->input2);
       d->input2 = memoryResult;
       break;
+    case 3:
+      d->input2 = w->destdata;
+      //printf("input 2 is wb: %d \n", d->input2);
+      break;
     default:
-      printf("input 2 is reg %d: %d\n", d->targetreg,d->s2data);
+      //printf("input 2 is reg %d: %d\n", d->targetreg,d->s2data);
       break;
     }
+    //printf("aluout: %d\n", x->aluout);
     //setPCWithInfo(w);
     *w=*m; *m=*x; *x=*d; *d=*f;
+    
     if (i <= maxpc) {
       fetch(f);
       decode(f);
@@ -135,7 +158,7 @@ int main(int argc, char *argv[])
     else {
       *f = *n;
     }
-    printf("-------------------------------------------\n");
+    // printf("-------------------------------------------\n");
   }
   printf("Cycles: %d\nInstructions Executed: %d\n", i, maxpc+1);
   free(d);  free(x);  free(m);  free(w);  free(n); free(f);

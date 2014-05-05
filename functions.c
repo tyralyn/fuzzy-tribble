@@ -112,7 +112,7 @@ void decode(InstInfo *instruction)
   instruction->fields.imm = ((val & 0xFFFF) << 16) >> 16;//(hal << 16) & 0x7FFF;
   instruction->fields.func = val & 0x3f;
 
-  printf("everything) op: %d rs: %d rt: %d rd: %d func: %d\n", instruction->fields.op, instruction->fields.rs, instruction->fields.rt, instruction->fields.rd, instruction->fields.func);
+  //printf("everything) op: %d rs: %d rt: %d rd: %d func: %d\n", instruction->fields.op, instruction->fields.rs, instruction->fields.rt, instruction->fields.rd, instruction->fields.func);
   
   //dividing possibilities by R, I, and J format
   if (op == 33 || op == 41) { //R-format
@@ -187,7 +187,7 @@ void decode(InstInfo *instruction)
     instruction->destreg=instruction->fields.rt;
     //( (instruction->fields.rs == NULL) ? printf("NULL\n") : printf("NOT NULL\n"));//= instruction->fields.rd;
     instruction->fields.rd = -1;
-    printf("i format: rs: %d rt: %d rd: %d destreg: %d imm: %d\n", instruction->fields.rs, instruction->fields.rt, instruction->fields.rd, instruction->destreg, instruction->fields.imm);
+    ///printf("i format: rs: %d rt: %d rd: %d destreg: %d imm: %d\n", instruction->fields.rs, instruction->fields.rt, instruction->fields.rd, instruction->destreg, instruction->fields.imm);
     instruction->targetreg=-1;
     instruction->sourcereg=instruction->fields.rs;
     instruction->s1data=regfile[instruction->sourcereg];
