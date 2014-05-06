@@ -41,47 +41,46 @@ int main(int argc, char *argv[])
   InstInfo* nop = malloc(sizeof(*nop));
   nop->inst = 31;
   int nopnopbool = 0;
+  int nopnopnext = 0;
+  InstInfo* F = malloc(sizeof(*F));
+  InstInfo* D = malloc(sizeof(*D));
+  InstInfo* X = malloc(sizeof(*X));
+  InstInfo* M = malloc(sizeof(*M));
+  InstInfo* Y = malloc(sizeof(*Y));
   while (i<=maxpc+4) {
     nopnopbool=0;
-    /* i++; */
+
     decode(d);
-    /*if (i%5 == 0) {
-    printf("noptime: ");
-    decode(nop);
-    }*/
+
     if (d->signals.mr == 1 && (d->fields.rt == f->sourcereg || d->fields.rt == f->targetreg)) {
       printf("nop nop who is tehre\n");
       nopnopbool = 1;
-      InstInfo* nullInfo = malloc(sizeof(*nullInfo));
-      printP2(f,d,nullInfo,nullInfo,nullInfo,instnum++); 
-      //i++;
-      //continue;
+      nopnopnext = 1;
     }
-    else { //elsenopbool==0) {
-      //i++; 
-      execute(x);
-      memory(m);
-      writeback(w); 
-      setPCWithInfo(w);  
-      // i++;
-      printf("no nop\n");
-      printP2(f,d,x,m,w,instnum++); 
-      //continue;
-    }
+    
+    //else { printf("NO NOP NO NOP\n");}
+    //nopnopnext=0;
+    execute(x);
+    memory(m);
+    writeback(w); 
+    setPCWithInfo(w);  
+    //printf("no nop\n");
+    printP2(f,d,x,m,w,instnum++); 
+    //continue;
+    
     i++;
-    /* printP2(f,d,x,m,w,instnum++); */
-     int memoryResult = m->aluout;//w->memout;
-     int executeResult=x->aluout;
-     int forwardA=0, forwardB=0;
-     int xRegWrite = x->signals.rw;
-     int mRegWrite = m->signals.rw;
-     int wRegWrite = m->signals.rw;
-     int wrd = w->destreg;
-     int mrd = m->destreg;
-     int xrd = x->destreg;
-     int drs = d->sourcereg;
-     int drt = d->targetreg;
-     if (xRegWrite == 1 && xrd != 0 && (xrd == drs)) { 
+    int memoryResult = m->aluout;//w->memout;
+    int executeResult=x->aluout;
+    int forwardA=0, forwardB=0;
+    int xRegWrite = x->signals.rw;
+    int mRegWrite = m->signals.rw;
+    int wRegWrite = m->signals.rw;
+    int wrd = w->destreg;
+    int mrd = m->destreg;
+    int xrd = x->destreg;
+    int drs = d->sourcereg;
+    int drt = d->targetreg;
+    if (xRegWrite == 1 && xrd != 0 && (xrd == drs)) { 
       forwardA=2; }
     else {
       if (mRegWrite == 1 && mrd !=0 && (mrd == drs)) {
@@ -93,7 +92,7 @@ int main(int argc, char *argv[])
 	}
       }
     }
-
+    
     if (xRegWrite == 1 && xrd != 0 && (xrd == drt)) { 
       forwardB=2; }
     else {
@@ -135,7 +134,19 @@ int main(int argc, char *argv[])
       break;
     }
     if (nopnopbool!= 1) 
-      *w=*m; *m=*x; *x=*d; *d=*f;
+      { *w=*m; *m=*x; *x=*d; *d=*f; }
+    else { //if (nopnponext == 1) {
+      InstInfo* nullInfo = malloc(sizeof(*nullInfo));
+      // *f = *f;
+      //*d = *d;
+      pc--;
+      *w = *m;
+      *m = *x;
+      *x = *nullInfo;
+      //i--;
+      maxpc++;
+    }
+    nopnopnext = 0;
     
     if (i <= maxpc) {
       fetch(f);
