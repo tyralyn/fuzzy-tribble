@@ -49,14 +49,25 @@ int main(int argc, char *argv[])
   InstInfo* Y = malloc(sizeof(*Y));
   while (i<=maxpc+4) {
     nopnopbool=0;
-
     decode(d);
 
     if (d->signals.mr == 1 && (d->fields.rt == f->sourcereg || d->fields.rt == f->targetreg)) {
       printf("nop nop who is tehre\n");
       nopnopbool = 1;
       nopnopnext = 1;
+      
+      InstInfo* nullInfo = malloc(sizeof(*nullInfo));
+      // *f = *f;
+      //*d = *d;
+      //*x=*x;
+      pc--;
+      *w = *m;
+      *m = *x;
+      *x = *nullInfo;
+      //i--;
+      //maxpc++;
     }
+    nopnopnext = 0;
     
     //else { printf("NO NOP NO NOP\n");}
     //nopnopnext=0;
@@ -135,18 +146,6 @@ int main(int argc, char *argv[])
     }
     if (nopnopbool!= 1) 
       { *w=*m; *m=*x; *x=*d; *d=*f; }
-    else { //if (nopnponext == 1) {
-      InstInfo* nullInfo = malloc(sizeof(*nullInfo));
-      // *f = *f;
-      //*d = *d;
-      pc--;
-      *w = *m;
-      *m = *x;
-      *x = *nullInfo;
-      //i--;
-      maxpc++;
-    }
-    nopnopnext = 0;
     
     if (i <= maxpc) {
       fetch(f);
