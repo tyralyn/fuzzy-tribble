@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
   int nopnopnext1=0;
 int nopnopnext2=0;
 int nopnopnext3=0;
-  while (i<=maxpc+4+1) {
+  while (i<=maxpc+4) {
     decode(d);
  
       //i++; 
@@ -59,7 +59,7 @@ int nopnopnext3=0;
      
 if(nopnopnext1 ==1){
 InstInfo* nullInfo = malloc(sizeof(*nullInfo));
-pc--;
+ maxpc++;
       *w = *m;
       *m = *x;
       *x = *nullInfo;
@@ -69,18 +69,18 @@ pc--;
      
      if(nopnopnext1==1)
        {
-	 nopnopnext=1;
-	 nopnopnext1=0;
+     nopnopnext=1;
+     nopnopnext1=0;
        }
 if(nopnopnext2==1)
        {
-	 nopnopnext1=1;
-	 nopnopnext2=0;
+     nopnopnext1=1;
+     nopnopnext2=0;
        }
 if(nopnopnext3==1)
        {
-	 nopnopnext2=1;
-	 nopnopnext3=0;
+     nopnopnext2=1;
+     nopnopnext3=0;
        }
      printP2(f,d,x,m,w,instnum++); 
      //continue;
@@ -101,12 +101,12 @@ if(nopnopnext3==1)
       forwardA=2; }
     else {
       if (mRegWrite == 1 && mrd !=0 && (mrd == drs)) {
-	forwardA= 1;
+    forwardA= 1;
       }
       else {
-	if (wRegWrite == 1 && wrd !=0 && (wrd==drs)) {
-	  forwardA = 3;
-	}
+    if (wRegWrite == 1 && wrd !=0 && (wrd==drs)) {
+      forwardA = 3;
+    }
       }
     }
 
@@ -114,12 +114,12 @@ if(nopnopnext3==1)
       forwardB=2; }
     else {
       if (mRegWrite == 1 && mrd !=0 && (mrd == drt)) {
-	forwardB= 1;
+    forwardB= 1;
       }
       else {
-	if (wRegWrite == 1 && wrd !=0 && (wrd==drt)) {
-	  forwardB = 3;
-	}
+    if (wRegWrite == 1 && wrd !=0 && (wrd==drt)) {
+      forwardB = 3;
+    }
       }
     }
     
