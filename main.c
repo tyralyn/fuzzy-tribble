@@ -45,23 +45,9 @@ int main(int argc, char *argv[])
     execute(x);
     memory(m);
     writeback(w); 
-    int F = (f==NULL) ? -1 : f->signals.rw;
-    //printf("%d, ", F);
-    int D = (d==NULL) ? -1 : d->signals.rw;
-    //printf("%d, ", D);
-    int X = (x==NULL) ? -1 : w->signals.rw;
-    //printf("%d, ", X);
-    int M = (m==NULL) ? -1 : m->signals.rw;
-    //printf("%d, ", M);
-    int W = (w==NULL) ? -1 : w->signals.rw;
-    //printf("%d, \n", W);
-    //printf("prelim\n");
-    //printf("F: %d D: %d X: %d M: %d W: %d \n", F, D, X, M, W);
-    // printf("m) rd: %d rs %d rt %d\n", m->fields.rd, m->fields.rs, m->fields.rt);
-    //printf("m) input1: %d input2: %d rt %d\n", m->input1, m->input2, m->fields.rt);
-    //setPCWithInfo(w);  
+    setPCWithInfo(w);  
     printP2(f,d,x,m,w,instnum++);
-    int memoryResult = w->memout;
+    int memoryResult = m->aluout;//w->memout;
     //printf("memoryResult %d, ", memoryResult);
     int executeResult=x->aluout;
     //printf("executeResult %d, ", executeResult);
@@ -112,15 +98,15 @@ int main(int argc, char *argv[])
     
     //printf("A %d, B %d \n", forwardA, forwardB);
     switch (forwardA) {
-    case 2:
+    case 2: //from execute
       d->input1 = executeResult;
       //printf("input 1 is alu: %d \n", d->input1);
       break;
-    case 1:
+    case 1: //from mem
       d->input1 = memoryResult;
-      //printf("input 1 is mem: %d \n", d->input1);
+      //printf("input 1 is mem: %d from reg %d %d\n", d->input1, m->destreg, m->aluout);
       break;
-    case 3:
+      case 3:
       d->input1 = w->destdata;
       //printf("input 1 is wb: %d \n", d->input1);
       break;
@@ -136,10 +122,10 @@ int main(int argc, char *argv[])
       //printf("input 2 is alu: %d \n",d->input2);
       break;
     case 1:
-      //printf("input 2 is mem: %d\n",d->input2);
       d->input2 = memoryResult;
+      //printf("input 2 is mem: %d from reg %d %d\n",d->input2, m->targetreg, m->aluout);
       break;
-    case 3:
+      case 3:
       d->input2 = w->destdata;
       //printf("input 2 is wb: %d \n", d->input2);
       break;
