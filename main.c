@@ -41,8 +41,11 @@ int main(int argc, char *argv[])
   InstInfo* nop = malloc(sizeof(*nop));
   nop->inst = 31;
   int nopnopbool = 0;
-  while (i<=maxpc+4) {
-    nopnopbool=0;
+  int nopnopnext = 0;
+  int nopnopnext1=0;
+int nopnopnext2=0;
+int nopnopnext3=0;
+  while (i<=maxpc+4+1) {
     decode(d);
  
       //i++; 
@@ -53,22 +56,32 @@ int main(int argc, char *argv[])
      // i++;
      //printf("no nop\n"); 
      //execute(d);
-     if (d->signals.mr == 1 && (d->fields.rt == f->sourcereg || d->fields.rt == f->targetreg)) {
-       //printf("nop nop who is tehre\n");
-      nopnopbool = 1;
-      //InstInfo* nullInfo = malloc(sizeof(*nullInfo));
-      
-      InstInfo* nullInfo = malloc(sizeof(*nullInfo));
-      // *f = *f;
-      //*d = *d;
-      //*x=*x;
-      pc--;
+     
+if(nopnopnext1 ==1){
+InstInfo* nullInfo = malloc(sizeof(*nullInfo));
+pc--;
       *w = *m;
       *m = *x;
-      *x = *d;
-      *d = *nullInfo;    //  printP2(f,d,nullInfo,nullInfo,nullInfo,instnum++); }
-     }
-
+      *x = *nullInfo;
+      //nopnopnext=0;
+      nopnopnext1=0;
+    }
+     
+     if(nopnopnext1==1)
+       {
+	 nopnopnext=1;
+	 nopnopnext1=0;
+       }
+if(nopnopnext2==1)
+       {
+	 nopnopnext1=1;
+	 nopnopnext2=0;
+       }
+if(nopnopnext3==1)
+       {
+	 nopnopnext2=1;
+	 nopnopnext3=0;
+       }
      printP2(f,d,x,m,w,instnum++); 
      //continue;
      i++;
@@ -137,9 +150,9 @@ int main(int argc, char *argv[])
     default:
       break;
     }
-    if (nopnopbool!= 1) 
-      *w=*m; *m=*x; *x=*d; *d=*f;
-    
+    if (nopnopnext1!= 1) 
+      {*w=*m; *m=*x; *x=*d; *d=*f;}
+
     if (i <= maxpc) {
       fetch(f);
       decode(f);
@@ -147,6 +160,20 @@ int main(int argc, char *argv[])
     else {
       *f = *n;
     }
+
+    if (d->signals.mr == 1 && (d->fields.rt == f->sourcereg || d->fields.rt == f->targetreg)) {
+       //printf("nop nop who is tehre\n");
+      nopnopbool = 1;
+      //InstInfo* nullInfo = malloc(sizeof(*nullInfo));
+      nopnopnext3=1;
+      
+      // *f = *f;
+      //*d = *d;
+      //*x=*x;
+          //  printP2(f,d,nullInfo,nullInfo,nullInfo,instnum++); }
+     }
+     else
+       nopnopnext=0;
     // printf("-------------------------------------------\n");
   }
   printf("Cycles: %d\nInstructions Executed: %d\n", i, maxpc+1);
