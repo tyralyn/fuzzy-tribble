@@ -38,39 +38,50 @@ int main(int argc, char *argv[])
   fetch(f);
   decode(f);
   i = 0;
+  InstInfo* nop = malloc(sizeof(*nop));
+  nop->inst = 31;
+  int nopnopbool = 0;
   while (i<=maxpc+4) {
-
-    i++;
+    nopnopbool=0;
+    /* i++; */
     decode(d);
-    execute(x);
-    memory(m);
-    writeback(w); 
-    setPCWithInfo(w);  
-    printP2(f,d,x,m,w,instnum++);
-    int memoryResult = m->aluout;//w->memout;
-    //printf("memoryResult %d, ", memoryResult);
-    int executeResult=x->aluout;
-    //printf("executeResult %d, ", executeResult);
-    int forwardA=0, forwardB=0;
-    //printf("%d, ", F);
-    int xRegWrite = x->signals.rw;
-    //printf("xRegWrite %d, ", xRegWrite);
-    int mRegWrite = m->signals.rw;
-    //printf("mRegWrite%d, ", mRegWrite);
-    int wRegWrite = m->signals.rw;
-    int wrd = w->destreg;
-    int mrd = m->destreg;//fields.rd;
-    //printf("mrd %d, ", mrd);
-    int xrd = x->destreg;//fields.rd;
-    //printf("xrd %d, ", xrd);
-    int drs = d->sourcereg;//fields.rs;
-    //printf("drs %d, ", drs);
-    int drt = d->targetreg;//fields.rt;
-    // printf("drt %d, ", drt);
-    ////printf("input1: %d, input2: %d,  aluout: %d, memout: %d\n", x->input1, x->input2, x->aluout, m->memout);
-    //printf("xRegWrite: %d mRegWrite: %d mrd: %d xrd: %d drs: %d drt: %d\n", xRegWrite);
-    ////printf("xRegWrite(%d) ==? 1 && xrd(%d) !=? 0 && (xrd(%d) ==? drs(%d))\n", xRegWrite, xrd, xrd, drs);
-    if (xRegWrite == 1 && xrd != 0 && (xrd == drs)) { 
+    /*if (i%5 == 0) {
+    printf("noptime: ");
+    decode(nop);
+    }*/
+    if (d->signals.mr == 1 && (d->fields.rt == f->sourcereg || d->fields.rt == f->targetreg)) {
+      printf("nop nop who is tehre\n");
+      nopnopbool = 1;
+      InstInfo* nullInfo = malloc(sizeof(*nullInfo));
+      printP2(f,d,nullInfo,nullInfo,nullInfo,instnum++); 
+      //i++;
+      //continue;
+    }
+    else { //elsenopbool==0) {
+      //i++; 
+      execute(x);
+      memory(m);
+      writeback(w); 
+      setPCWithInfo(w);  
+      // i++;
+      printf("no nop\n");
+      printP2(f,d,x,m,w,instnum++); 
+      //continue;
+    }
+    i++;
+    /* printP2(f,d,x,m,w,instnum++); */
+     int memoryResult = m->aluout;//w->memout;
+     int executeResult=x->aluout;
+     int forwardA=0, forwardB=0;
+     int xRegWrite = x->signals.rw;
+     int mRegWrite = m->signals.rw;
+     int wRegWrite = m->signals.rw;
+     int wrd = w->destreg;
+     int mrd = m->destreg;
+     int xrd = x->destreg;
+     int drs = d->sourcereg;
+     int drt = d->targetreg;
+     if (xRegWrite == 1 && xrd != 0 && (xrd == drs)) { 
       forwardA=2; }
     else {
       if (mRegWrite == 1 && mrd !=0 && (mrd == drs)) {
@@ -96,46 +107,35 @@ int main(int argc, char *argv[])
       }
     }
     
-    //printf("A %d, B %d \n", forwardA, forwardB);
     switch (forwardA) {
     case 2: //from execute
       d->input1 = executeResult;
-      //printf("input 1 is alu: %d \n", d->input1);
       break;
     case 1: //from mem
       d->input1 = memoryResult;
-      //printf("input 1 is mem: %d from reg %d %d\n", d->input1, m->destreg, m->aluout);
       break;
       case 3:
       d->input1 = w->destdata;
-      //printf("input 1 is wb: %d \n", d->input1);
       break;
     default:
-      // if (sourcereg > 0) { printf("source reg %d: %d\n", d->sourcereg, regfile[d->sourcereg]); }
-      //printf("input 1 is reg %d: %d\n", d->sourcereg, d->s1data);
       break;
     }
 
     switch (forwardB) {
     case 2:
       d->input2 = executeResult;
-      //printf("input 2 is alu: %d \n",d->input2);
       break;
     case 1:
       d->input2 = memoryResult;
-      //printf("input 2 is mem: %d from reg %d %d\n",d->input2, m->targetreg, m->aluout);
       break;
       case 3:
       d->input2 = w->destdata;
-      //printf("input 2 is wb: %d \n", d->input2);
       break;
     default:
-      //printf("input 2 is reg %d: %d\n", d->targetreg,d->s2data);
       break;
     }
-    //printf("aluout: %d\n", x->aluout);
-    //setPCWithInfo(w);
-    *w=*m; *m=*x; *x=*d; *d=*f;
+    if (nopnopbool!= 1) 
+      *w=*m; *m=*x; *x=*d; *d=*f;
     
     if (i <= maxpc) {
       fetch(f);

@@ -102,6 +102,12 @@ void decode(InstInfo *instruction)
     else
       opstring[26-pos]='0';
   }
+
+  if (op == 31) {
+    printf("NOP NOP NOP NOP NOP NOP NOPON PON NOP NOP NOP NOP NOP NOP NOP \n");
+    return;
+  }
+  
   // printf("op %d in binary: %s\n", testImm, opstring);
   int jalImm = ((val & 0x3FFFFFF) << 6) >> 6;
   // fill in the rest of the fields here
@@ -171,7 +177,7 @@ void decode(InstInfo *instruction)
       instruction->signals.rw=0;
       instruction->sourcereg = instruction->fields.rs;
       instruction->targetreg = -1;
-      instruction->destreg = -1;
+      //instruction->destreg = -1;
       sprintf(instruction->string,"jr $%d",
 	      instruction->fields.rs);
       instruction->destreg = -1;//instruction->fields.rd;
@@ -190,6 +196,7 @@ void decode(InstInfo *instruction)
     instruction->s1data=regfile[instruction->sourcereg];
     instruction->s2data=instruction->fields.imm;//regfile[instruction->targetreg];
     instruction->input1=regfile[instruction->fields.rs];//s1data;
+    instruction->destreg = instruction->fields.rt;
     instruction->input2=instruction->fields.imm;
     switch (op) {
     case 48: //addi
@@ -251,6 +258,7 @@ void decode(InstInfo *instruction)
           instruction->fields.rs, instruction->fields.rt, 
           instruction->fields.imm);
       instruction->destreg = -1;//instruction->fields.rd;
+      instruction->targetreg = instruction->fields.rt;
       instruction->input2=instruction->s2data;
 
 	// changed condition to decode
@@ -270,7 +278,7 @@ void decode(InstInfo *instruction)
     instruction->fields.imm = testImm;//jalImm << 2;
     //switch(op) {
     // case 10: //jal
-    instruction->sourcereg = instruction->targetreg = instruction->destreg = -1;
+    instruction->sourcereg = instruction->targetreg =  -1;
     instruction->signals.aluop=-1;
     instruction->signals.mw=0;
     instruction->signals.mtr=2;
