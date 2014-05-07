@@ -16,19 +16,8 @@ int datamem[1024];
 // program counter
 int pc;
 
-/* load
- *
- * Given the filename, which is a text file that 
- * contains the instructions stored as integers 
- *
- * You will need to load it into your global structure that 
- * stores all of the instructions.
- *
- * The return value is the maxpc - the number of instructions
- * in the file
- */
-int load(char *filename)
-{
+
+int load(char *filename) {
     FILE *file;
     int* fchar;
     char stringy[10000];
@@ -45,21 +34,11 @@ int load(char *filename)
     return maxpc;    
 }
 
-
-/* fetch
- *
- * This fetches the next instruction and updates the program counter.
- * "fetching" means filling in the inst field of the instruction.
- */
-void fetch(InstInfo *inst)
-{
-  // loop through instruction array (instmem) using inst.pc
-  inst->pc = pc;//program counter of inst is pc of machine
-  int instruction = instmem[inst->pc]; //get instruction int from instmem
-  //printf("fetch %d \n", inst->inst);//debugging for fetch
-  inst->inst = instruction;//set inst's instruction int to the one from instmem
-  // printf("fetch %d\n", inst->inst);
-  pc++; //increment program counter of whole simulation  
+void fetch(InstInfo *inst) {
+  inst->pc = pc;
+  int instruction = instmem[inst->pc];
+  inst->inst = instruction;
+  pc++; 
 }
 
 /* decode
@@ -85,10 +64,8 @@ void decode(InstInfo *instruction)
       bitstring[31-pos]='1';
     else
       bitstring[31-pos]='0';
-   }
-  //printf("decode %d\n", instruction->inst);
+  }
   
-  //printing to test getting op
   int op, test, func, testImm;
   binVal = 0;
   char opstring[6];
@@ -102,23 +79,17 @@ void decode(InstInfo *instruction)
     else
       opstring[26-pos]='0';
   }
-
-  if (op == 31) {
-    printf("NOP NOP NOP NOP NOP NOP NOPON PON NOP NOP NOP NOP NOP NOP NOP \n");
-    return;
-  }
   
-  // printf("op %d in binary: %s\n", testImm, opstring);
+  
+  
   int jalImm = ((val & 0x3FFFFFF) << 6) >> 6;
-  // fill in the rest of the fields here
+  
   instruction->fields.op = op;
   instruction->fields.rd = (val >> 11) & 0x1F;
   instruction->fields.rs = (val >> 21) & 0x1F;
   instruction->fields.rt = (val >> 16) & 0x1F;
-  instruction->fields.imm = ((val & 0xFFFF) << 16) >> 16;//(hal << 16) & 0x7FFF;
+  instruction->fields.imm = ((val & 0xFFFF) << 16) >> 16;
   instruction->fields.func = val & 0x3f;
-
-  //printf("everything) op: %d rs: %d rt: %d rd: %d func: %d\n", instruction->fields.op, instruction->fields.rs, instruction->fields.rt, instruction->fields.rd, instruction->fields.func);
   
   //dividing possibilities by R, I, and J format
   if (op == 33 || op == 41) { //R-format
@@ -320,7 +291,7 @@ void execute(InstInfo *instruction)
     instruction->aluout=k;
     break;
   case 1: //sub
-    k=regfile[instruction->fields.rs]-regfile[instruction->fields.rt];
+    k=i1-i2;
     instruction->aluout=k;
     break;
   case 6: //sgt

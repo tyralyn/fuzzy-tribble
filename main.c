@@ -40,110 +40,60 @@ int main(int argc, char *argv[])
   i = 0;
   InstInfo* nop = malloc(sizeof(*nop));
   nop->inst = 31;
-  int nopnopbool = 0;
-  int nopnopnext = 0;
-  int nopnopnext1=0;
-  int nopnopnext2=0;
-  int nopnopnext3=0;
-  while (i<=maxpc+4) {
-    decode(d);
-    
-    if(nopnopnext1 ==1){
-      InstInfo* nullInfo = malloc(sizeof(*nullInfo));
-      //maxpc++;
-      i--;
-      *w = *m;
-      *m = *x;
-      *x = *nullInfo;
-      //nopnopnext=0;
-      nopnopnext1=0;
-    }
-    writeback(w); 
-    execute(x);
-    memory(m);
-    setPCWithInfo(w);  
-    if(nopnopnext1==1)
-      {
-	nopnopnext=1;
-	nopnopnext1=0;
-      }
-    if(nopnopnext2==1)
-      {
-	nopnopnext1=1;
-	nopnopnext2=0;
-      }
-    if(nopnopnext3==1)
-      {
-	nopnopnext2=1;
-	nopnopnext3=0;
-      }
-    printP2(f,d,x,m,w,instnum++); 
-    //continue;
-    i++;
-    /* printP2(f,d,x,m,w,instnum++); */
-    int memoryResult = m->aluout;//w->memout;
-    int executeResult=x->aluout;
-    int forwardA=0, forwardB=0;
-    int xRegWrite = x->signals.rw;
-    int mRegWrite = m->signals.rw;
-    int wRegWrite = m->signals.rw;
-    int wrd = w->destreg;
-    int mrd = m->destreg;
-    int xrd = x->destreg;
-    int drs = d->sourcereg;
-    int drt = d->targetreg;
-    /*
-      if (wRegWrite == 1 && wrd != 0 && (wrd == drs)) { 
-      forwardA=2; 
-      //     else {
-      if (mRegWrite == 1 && mrd !=0 && (mrd == drs)) {
-      forwardA= 1;
-      }
-      //else {
-      if (xRegWrite == 1 && xrd !=0 && (xrd==drs)) {
-      forwardA = 3;
-      // }
-      // }
-      }
-      }
-      
-      
-      if (wRegWrite == 1 && wrd != 0 && (wrd == drt)) { 
-      forwardB=2; 
-      //else {
-      if (mRegWrite == 1 && mrd !=0 && (mrd == drt)) {
-      forwardB= 1;
-      }
-      //else {
-      if (xRegWrite == 1 && xrd !=0 && (xrd==drt)) {
-      forwardB = 3;
-      //}
-      //     }
-      }
-      }88888888888888*/
-    if (xRegWrite == 1 && xrd != 0 && (xrd == drs)) { 
-      forwardA=2; }
-    else {
-      if (mRegWrite == 1 && mrd !=0 && (mrd == drs)) {
-	forwardA= 1;
-      }
-      else {
-	if (wRegWrite == 1 && wrd !=0 && (wrd==drs)) {
-	  forwardA = 3;
-	}
-      }
-    }
-    
-    if (xRegWrite == 1 && xrd != 0 && (xrd == drt)) { 
-      forwardB=2; }
-    else {
-      if (mRegWrite == 1 && mrd !=0 && (mrd == drt)) {
-	forwardB= 1;
-      }
-      else {
-	if (wRegWrite == 1 && wrd !=0 && (wrd==drt)) {
-	  forwardB = 3;
-	}
+  int nopnop = 0;
+   while (i<=maxpc+4) {
+     decode(x);
+     int memoryResult = m->aluout;//w->memout;
+     int executeResult=x->aluout;
+     int forwardA=0, forwardB=0;
+     int xRegWrite = x->signals.rw;
+     int mRegWrite = m->signals.rw;
+     int wRegWrite = m->signals.rw;
+     int wrd = w->destreg;
+     int mrd = m->destreg;
+     int xrd = x->destreg;
+     int drs = d->sourcereg;
+     int drt = d->targetreg;
+     int dmr = d->signals.mr;
+     int frs = f->sourcereg;
+     int frt = f->targetreg;
+     int DRT = d->fields.rt;
+     //int DRS = d->fields.rs;
+     
+     /*if ( dmr == 1 && ((DRT == frs) || (DRT == frt))) {
+       nopnop=1;
+     }
+     nopnop=0;
+
+     if (nopnop == 1) {
+       *w = *m;
+       *m = *x;
+       *x = *nop;
+       }*/
+     
+     if (xRegWrite == 1 && xrd != 0 && (xrd == drs)) { 
+       forwardA=2; }
+     else {
+       if (mRegWrite == 1 && mrd !=0 && (mrd == drs)) {
+	 forwardA= 1;
+       }
+       else {
+	 if (wRegWrite == 1 && wrd !=0 && (wrd==drs)) {
+	   forwardA = 3;
+	 }
+       }
+     }
+     
+     if (xRegWrite == 1 && xrd != 0 && (xrd == drt)) { 
+       forwardB=2; }
+     else {
+       if (mRegWrite == 1 && mrd !=0 && (mrd == drt)) {
+	 forwardB= 1;
+       }
+       else {
+	 if (wRegWrite == 1 && wrd !=0 && (wrd==drt)) {
+	   forwardB = 3;
+	 }
       }
     }
     
@@ -174,7 +124,15 @@ int main(int argc, char *argv[])
     default:
       break;
     }
-    if (nopnopnext1!= 1) 
+    //   decode(d);
+    writeback(w); 
+    execute(x);
+    memory(m);
+    setPCWithInfo(w);  
+    printP2(f,d,x,m,w,instnum++); 
+    i++;
+
+    //if (nopnop==0) 
       {*w=*m; *m=*x; *x=*d; *d=*f;}
     
     if (i <= maxpc) {
@@ -183,22 +141,9 @@ int main(int argc, char *argv[])
     }
     else {
       *f = *n;
-    }
+    }  
+    nopnop=0;
     
-    if (d->signals.mr == 1 && (d->fields.rt == f->sourcereg || d->fields.rt == f->targetreg)) {
-      //printf("nop nop who is tehre\n");
-      nopnopbool = 1;
-      //InstInfo* nullInfo = malloc(sizeof(*nullInfo));
-      nopnopnext3=1;
-      //execute(d);
-      // *f = *f;
-      //*d = *d;
-      //*x=*x;
-      //  printP2(f,d,nullInfo,nullInfo,nullInfo,instnum++); }
-    }
-    else
-      nopnopnext=0;
-    // printf("-------------------------------------------\n");
   }
   printf("Cycles: %d\nInstructions Executed: %d\n", i, maxpc+1);
   free(d);  free(x);  free(m);  free(w);  free(n); free(f);
