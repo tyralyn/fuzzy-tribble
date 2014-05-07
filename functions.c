@@ -141,29 +141,29 @@ void decode(InstInfo *instruction)
       instruction->signals.rw=1;
       switch(instruction->fields.func) {
       case 40: //and
-	instruction->signals.aluop=2;
-	sprintf(instruction->string,"and $%d, $%d, $%d",
-		instruction->fields.rd, instruction->fields.rs, 
-		instruction->fields.rt);
-	instruction->destreg = instruction->fields.rd;
-	break;
+    instruction->signals.aluop=2;
+    sprintf(instruction->string,"and $%d, $%d, $%d",
+        instruction->fields.rd, instruction->fields.rs, 
+        instruction->fields.rt);
+    instruction->destreg = instruction->fields.rd;
+    break;
       case 24: //sub
-	instruction->signals.aluop=1;
-	sprintf(instruction->string,"sub $%d, $%d, $%d",
-		instruction->fields.rd, instruction->fields.rs, 
-		instruction->fields.rt);
-	instruction->destreg = instruction->fields.rd;
-	break;
+    instruction->signals.aluop=1;
+    sprintf(instruction->string,"sub $%d, $%d, $%d",
+        instruction->fields.rd, instruction->fields.rs, 
+        instruction->fields.rt);
+    instruction->destreg = instruction->fields.rd;
+    break;
       case 10: //sgt
-	instruction->signals.aluop=6;
-	sprintf(instruction->string,"sgt $%d, $%d, $%d",
-		instruction->fields.rd, instruction->fields.rs, 
-		instruction->fields.rt);
-	instruction->destreg = instruction->fields.rd;
-	break;
+    instruction->signals.aluop=6;
+    sprintf(instruction->string,"sgt $%d, $%d, $%d",
+        instruction->fields.rd, instruction->fields.rs, 
+        instruction->fields.rt);
+    instruction->destreg = instruction->fields.rd;
+    break;
       default:
-	//printf("wtf1 %d \n", func);
-	break;
+    //printf("wtf1 %d \n", func);
+    break;
       }
       break;
     case 41: //jr
@@ -179,7 +179,7 @@ void decode(InstInfo *instruction)
       instruction->targetreg = -1;
       //instruction->destreg = -1;
       sprintf(instruction->string,"jr $%d",
-	      instruction->fields.rs);
+          instruction->fields.rs);
       instruction->destreg = -1;//instruction->fields.rd;
       break;
     default:
@@ -225,7 +225,7 @@ void decode(InstInfo *instruction)
       sprintf(instruction->string,"lw $%d, %d($%d)",
           //c switched rs and rt
           instruction->fields.rt, instruction->fields.imm, 
-	  instruction->fields.rs);
+      instruction->fields.rs);
       instruction->destreg = instruction->fields.rt;
       //printf("LW: rs(%d): %d rt(%d): %d rd(%d): %d imm: %d\n", instruction->fields.rs, regfile[instruction->fields.rs],instruction->fields.rt, regfile[instruction->fields.rt], instruction->fields.rd, regfile[instruction->fields.rd], instruction->fields.imm); 
       break;
@@ -261,12 +261,12 @@ void decode(InstInfo *instruction)
       instruction->targetreg = instruction->fields.rt;
       instruction->input2=instruction->s2data;
 
-	// changed condition to decode
+    // changed condition to decode
       if (instruction->input1 < instruction->input2)
-	instruction->aluout = 1;
+    instruction->aluout = 1;
       else
-	instruction->aluout = 0;
-	break;
+    instruction->aluout = 0;
+    break;
     default:
       break;
     }
@@ -320,7 +320,7 @@ void execute(InstInfo *instruction)
     instruction->aluout=k;
     break;
   case 1: //sub
-    k=i1-i2;
+    k=regfile[instruction->fields.rs]-regfile[instruction->fields.rt];
     instruction->aluout=k;
     break;
   case 6: //sgt
