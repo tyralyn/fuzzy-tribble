@@ -40,60 +40,142 @@ int main(int argc, char *argv[])
   i = 0;
   InstInfo* nop = malloc(sizeof(*nop));
   nop->inst = 31;
-  int nopnop = 0;
-   while (i<=maxpc+4) {
-     decode(x);
-     int memoryResult = m->aluout;//w->memout;
-     int executeResult=x->aluout;
-     int forwardA=0, forwardB=0;
-     int xRegWrite = x->signals.rw;
-     int mRegWrite = m->signals.rw;
-     int wRegWrite = m->signals.rw;
-     int wrd = w->destreg;
-     int mrd = m->destreg;
-     int xrd = x->destreg;
-     int drs = d->sourcereg;
-     int drt = d->targetreg;
-     int dmr = d->signals.mr;
-     int frs = f->sourcereg;
-     int frt = f->targetreg;
-     int DRT = d->fields.rt;
-     //int DRS = d->fields.rs;
-     
-     /*if ( dmr == 1 && ((DRT == frs) || (DRT == frt))) {
-       nopnop=1;
-     }
-     nopnop=0;
+  int nopnop=0; 
+  int MAXPC4 = maxpc + 4;
+  int k = 0;
+  int predictionCorrect = 0;
+  while (i<=MAXPC4) {
+    //   predictionCorrec
+    //decode(d);
+    //writeback(w); 
+    //decode(d);
+    //execute(x);
+    // memory(m);
+    //setPCWithInfo(w);  
+    //printP2(f,d,x,m,w,instnum++); 
+    //i++;
 
-     if (nopnop == 1) {
-       *w = *m;
-       *m = *x;
-       *x = *nop;
-       }*/
-     
-     if (xRegWrite == 1 && xrd != 0 && (xrd == drs)) { 
-       forwardA=2; }
-     else {
-       if (mRegWrite == 1 && mrd !=0 && (mrd == drs)) {
-	 forwardA= 1;
-       }
-       else {
-	 if (wRegWrite == 1 && wrd !=0 && (wrd==drs)) {
-	   forwardA = 3;
-	 }
-       }
-     }
-     
-     if (xRegWrite == 1 && xrd != 0 && (xrd == drt)) { 
-       forwardB=2; }
-     else {
-       if (mRegWrite == 1 && mrd !=0 && (mrd == drt)) {
-	 forwardB= 1;
-       }
-       else {
-	 if (wRegWrite == 1 && wrd !=0 && (wrd==drt)) {
-	   forwardB = 3;
-	 }
+
+    writeback(w);
+    memory(m);
+    execute(x);
+    decode(d);
+    execute(d);
+    int dBType = d->signals.btype;
+    int guessPC = pc+1;
+    printf("btye: %d\n", dBType);
+    if (dBType > 0) { 
+      if (d->aluout == guessPC) {
+	predictionCorrect = 1;
+	printf("BRANCHING");
+	printf(" nextPC: %d pcvalue: %d\n", guessPC, d->aluout);
+      }
+      else {
+	predictionCorrect = 0;
+	printf("NOT BRANCHING\n");
+      }
+    }
+    //printf(" nextPC: %d pcvalue: %d\n", guessPC); 
+    
+    
+    setPCWithInfo(w);  
+    printP2(f,d,x,m,w,instnum++); 
+
+
+
+    
+    //    if (guessPC == 0) {
+
+
+    int memoryResult = m->memout;//w->memout;
+    int executeResult=x->aluout;
+    int forwardA=0, forwardB=0;
+    int xRegWrite = x->signals.rw;
+    int mRegWrite = m->signals.rw;
+    int wRegWrite = m->signals.rw;
+    //    int dBType = d->signals.btype;
+    int wrd = w->destreg;
+    int mrd = m->destreg;
+    int xrd = x->destreg;
+    int drs = d->sourcereg;
+    int drt = d->targetreg;
+    int dmr = d->signals.mr;
+    int drd = d->destreg;
+    int frs = f->sourcereg;
+    int frt = f->targetreg;
+    if (dBType != 0) {
+      if (dmr == 1 && ( drd == frs || drd ==frt) ) {
+	nopnop = 1;
+	//printf("SETTING NOPNOP! %d\n", nopnop);
+      } 
+    }
+    
+
+    /*    int memoryResult = m->memout;//w->memout;
+    int executeResult=x->aluout;
+    int forwardA=0, forwardB=0;
+    int xRegWrite = x->signals.rw;
+    int mRegWrite = m->signals.rw;
+    int wRegWrite = m->signals.rw;
+    int wrd = w->destreg;
+    int mrd = m->destreg;
+    int xrd = x->destreg;
+    int drs = d->sourcereg;
+    int drt = d->targetreg;*/
+    else {
+      dmr = x->signals.mr;
+      drd = x->destreg;
+      frs = d->sourcereg;
+      frt = d->targetreg;
+      // int k = 0;
+      
+      //printf("memorytest %d\n", memoryResult);
+      if (dmr == 1 && ( drd == frs || drd ==frt) ) {
+	nopnop = 1;
+	//printf("SETTING NOPNOP! %d\n", nopnop);
+      }
+      else {
+	//printf("NOT SETTING NOPNOP %d\n", nopnop);
+      }    
+    }
+    //*/if (guessPC == 0) {
+    //int dmr = d->signals.mr;
+    // int drd = d->destreg;
+    //int frs = f->sourcereg;
+    // int frt = f->targetreg;
+      
+    if (wRegWrite == 1 && wrd != 0 && (wrd == drs)) { 
+      forwardA=3; 
+      
+      //printf("3a %d \n", regfile[wrd]);
+    }
+    else {
+      if (mRegWrite == 1 && mrd !=0 && (mrd == drs)) {
+	forwardA= 1;
+	//printf("1a %d \n", memoryResult);//regfile[mrd]);
+      }
+      else {
+	if (xRegWrite == 1 && xrd !=0 && (xrd==drs)) {
+	  //printf("2a %d \n", regfile[xrd]);
+	  forwardA = 2;
+	}
+      }
+    }
+  
+    if (wRegWrite == 1 && wrd != 0 && (wrd == drt)) { 
+      forwardB=3; 
+      //printf("3b  %d \n", regfile[wrd]);
+    }
+    else {
+      if (mRegWrite == 1 && mrd !=0 && (mrd == drt)) {
+	//printf("1b %d \n", regfile[mrd]);
+	forwardB= 1;
+      }
+      else {
+	if (xRegWrite == 1 && xrd !=0 && (xrd==drt)) {
+	  forwardB = 2;
+	  //printf("2b  %d \n", regfile[xrd]);
+	}
       }
     }
     
@@ -101,8 +183,8 @@ int main(int argc, char *argv[])
     case 2: //from execute
       d->input1 = executeResult;
       break;
-    case 1: //from mem
-      d->input1 = memoryResult;
+    case 1: //from mem 
+      d->input1 = m->memout;//memoryResult;
       break;
     case 3:
       d->input1 = w->destdata;
@@ -110,6 +192,7 @@ int main(int argc, char *argv[])
     default:
       break;
     }
+    // printf("D %d input1: %d\n", forwardA, d->input1);
     
     switch (forwardB) {
     case 2:
@@ -124,28 +207,47 @@ int main(int argc, char *argv[])
     default:
       break;
     }
-    //   decode(d);
-    writeback(w); 
-    execute(x);
-    memory(m);
-    setPCWithInfo(w);  
-    printP2(f,d,x,m,w,instnum++); 
+    //printf("D inputs: %d %d\n", d->input1, d->input2);
+    // decode(d);
+    //writeback(w); 
+    // memory(m);
+    //decode(d);
+    // execute(x);
+    //decode(d);
+    //memory(m);
+    //setPCWithInfo(w);  
+    //printP2(f,d,x,m,w,instnum++); 
     i++;
+    //d->input1=
+    //printf("D inputs: %d %d\n", d->input1, d->input2);
+    //decode(d);
+    if (nopnop==1 || ( predictionCorrect == 0 && dBType>0)) {     //printf("NO NOP\n"
+      *w = *m;
+      *m = *x;
+      *x = *nop;
+      //*w=*m; *m=*x; *x=*d; *d=*f;
+      i--;
+      k++;
+      pc--;
 
-    //if (nopnop==0) 
-      {*w=*m; *m=*x; *x=*d; *d=*f;}
+      printf("nopped\n");
+    }
+    else {
+      //printf("NOPNOP!\n");
+      *w=*m; *m=*x; *x=*d; *d=*f;
+    }
     
+    //setPCWithInfo(w);  
     if (i <= maxpc) {
       fetch(f);
       decode(f);
     }
     else {
       *f = *n;
-    }  
-    nopnop=0;
-    
+    }
+    nopnop = 0;
   }
-  printf("Cycles: %d\nInstructions Executed: %d\n", i, maxpc+1);
+  printf("Cycles: %d\nInstructions Executed: %d\n", i+k, maxpc+1);
   free(d);  free(x);  free(m);  free(w);  free(n); free(f);
   exit(0);
 }

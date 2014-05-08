@@ -90,7 +90,7 @@ void decode(InstInfo *instruction)
   instruction->fields.rt = (val >> 16) & 0x1F;
   instruction->fields.imm = ((val & 0xFFFF) << 16) >> 16;
   instruction->fields.func = val & 0x3f;
-  
+
   //dividing possibilities by R, I, and J format
   if (op == 33 || op == 41) { //R-format
     instruction->destreg=instruction->fields.rd;
@@ -112,18 +112,20 @@ void decode(InstInfo *instruction)
       instruction->signals.rw=1;
       switch(instruction->fields.func) {
       case 40: //and
-    instruction->signals.aluop=2;
-    sprintf(instruction->string,"and $%d, $%d, $%d",
-        instruction->fields.rd, instruction->fields.rs, 
-        instruction->fields.rt);
-    instruction->destreg = instruction->fields.rd;
-    break;
+	instruction->signals.aluop=2;
+	sprintf(instruction->string,"and $%d, $%d, $%d",
+		instruction->fields.rd, instruction->fields.rs, 
+		instruction->fields.rt);
+	instruction->destreg = instruction->fields.rd;
+	break;
       case 24: //sub
-    instruction->signals.aluop=1;
-    sprintf(instruction->string,"sub $%d, $%d, $%d",
-        instruction->fields.rd, instruction->fields.rs, 
+	instruction->signals.aluop=1;
+	sprintf(instruction->string,"sub $%d, $%d, $%d",
+		instruction->fields.rd, instruction->fields.rs, 
         instruction->fields.rt);
     instruction->destreg = instruction->fields.rd;
+    instruction->aluout = instruction->input1-instruction->input2;
+    // printf("DECODE input1 %d input2 %d output %d \n", instruction->input1, instruction->input2, instruction->aluout);
     break;
       case 10: //sgt
     instruction->signals.aluop=6;
@@ -152,6 +154,8 @@ void decode(InstInfo *instruction)
       sprintf(instruction->string,"jr $%d",
           instruction->fields.rs);
       instruction->destreg = -1;//instruction->fields.rd;
+      instruction->aluout = regfile[31];
+      printf("jr $%d with value of %d\n",  instruction->fields.rs, instruction->aluout);
       break;
     default:
       //printf("wtf2 \n");
@@ -212,7 +216,7 @@ void decode(InstInfo *instruction)
       sprintf(instruction->string,"sw $%d,%d($%d)",
           instruction->fields.rt, instruction->fields.imm, 
           instruction->fields.rs);
-      instruction->destreg = -1;//instruction->fields.rd;
+      instruction->destreg = -1;//instruction->fields.rt;
       instruction->targetreg = instruction->fields.rt;
       /* printf("SW: rs(%d): %d rt(%d): %d rd(%d): %d imm: %d\n", instruction->fields.rs, regfile[instruction->fields.rs],instruction->fields.rt, regfile[instruction->fields.rt], instruction->fields.rd, regfile[instruction->fields.rd], instruction->fields.imm); */
       break;
@@ -232,12 +236,16 @@ void decode(InstInfo *instruction)
       instruction->targetreg = instruction->fields.rt;
       instruction->input2=instruction->s2data;
 
+      int k ;
     // changed condition to decode
-      if (instruction->input1 < instruction->input2)
-    instruction->aluout = 1;
-      else
-    instruction->aluout = 0;
-    break;
+      if (instruction->input1 < instruction->input2) {
+	k = instruction->pc+1;
+	instruction->aluout =pc +  instruction->fields.imm; }
+      else {
+	instruction->aluout = pc+1;
+	k = instruction->fields.imm+pc;
+	printf("blt with value of %d, as opposed to %d\n", instruction->aluout, k); }
+      break;
     default:
       break;
     }
@@ -249,6 +257,7 @@ void decode(InstInfo *instruction)
     instruction->fields.imm = testImm;//jalImm << 2;
     //switch(op) {
     // case 10: //jal
+    printf("jal %d with value of %d\n", instruction->fields.imm, instruction->aluout);
     instruction->sourcereg = instruction->targetreg =  -1;
     instruction->signals.aluop=-1;
     instruction->signals.mw=0;
@@ -258,8 +267,9 @@ void decode(InstInfo *instruction)
     instruction->signals.btype=01;
     instruction->signals.rdst=2;
     instruction->signals.rw=1;
-    sprintf(instruction->string, "jal %d", instruction->fields.imm);
+    sprintf(instruction->string, "jal %d", instruction->fields.imm + pc);
     instruction->destreg=31;
+    instruction->aluout = instruction->fields.imm;
     //break;
     // default:
       //   break;
@@ -282,21 +292,22 @@ void execute(InstInfo *instruction)
       break;
     }
     k=i1+i2;
-    instruction->aluout=k;
+    instruction->aluout=instruction->memout=k;
     
-    //printf("input1 %d input2 %d output %d \n", instruction->input1, instruction->input2, instruction->aluout);
+    //    printf("input1 %d input2 %d output %d \n", instruction->input1, instruction->input2, instruction->aluout);
     break;
   case 2: //and
     k=i1 & i2;
-    instruction->aluout=k;
+    instruction->aluout=instruction->memout=k;
     break;
   case 1: //sub
     k=i1-i2;
     instruction->aluout=k;
+    //printf("EXECUTE input1 %d input2 %d output %d \n", instruction->input1, instruction->input2, instruction->aluout);
     break;
   case 6: //sgt
     k=(i1>i2) ? 1 : 0;
-    instruction->aluout=k;
+    instruction->aluout=instruction->memout=k;
     break;
   case 7: //blt
     //k=(i1<i2) ? 1 : 0;
@@ -317,11 +328,12 @@ void memory(InstInfo *instruction)
   //printf("memory %d\n", instruction->inst);
   if (instruction->signals.mr==1) { //lw
     instruction->memout=datamem[instruction->aluout];
+    //printf("loading word %d to register %d. word found at location %d, made from imm %d and %d, found at register %d\n", datamem[instruction->aluout], instruction->destreg, instruction->aluout, instruction->fields.imm, regfile[instruction->sourcereg], instruction->sourcereg);
     /* //printf("store word memout%d aluout %d \n", instruction->memout, instruction->aluout); */
   }
   if (instruction->signals.mw==1) { //sw
     datamem[instruction->aluout]=regfile[instruction->targetreg];
-    /* printf("store word: content %d datamemIndex %d \n",regfile[instruction->targetreg] , instruction->aluout);  */
+    //printf("storing word %d from register %d at location %d, made from immediate %d and %d, the content from %d\n", regfile[instruction->targetreg], instruction->targetreg, instruction->aluout, instruction->fields.imm, regfile[instruction->sourcereg], instruction->sourcereg);
     /* printf("input1: %d input2: %d aluout: %d\n", instruction->input1, instruction->input2, instruction->aluout);  */
 
   }
@@ -354,6 +366,7 @@ void writeback(InstInfo *instruction)
   //printf("writeback %d\n", instruction->inst);
   //printf("SW: rs(%d): %d rt(%d): %d rd(%d): %d imm: %d\n", instruction->fields.rs, regfile[instruction->fields.rs],instruction->fields.rt, regfile[instruction->fields.rt], instruction->fields.rd, regfile[instruction->fields.rd], instruction->fields.imm);
   //printf("aluout: %d imm:%d rscontent: %d",instruction->aluout, instruction->fields.imm, regfile [instruction->fields.rs]);
+  //printf("WRITEBACK input1 %d input2 %d output %d \n", instruction->input1, instruction->input2, instruction->aluout);
   if (instruction->signals.rw==0)
     return;
   switch (instruction->signals.rdst) {
@@ -380,21 +393,22 @@ void writeback(InstInfo *instruction)
  *
  *
  */
-
-void setPCWithInfo(InstInfo *instruction) {
+void  setPCWithInfo(InstInfo *instruction) {
   switch (instruction->signals.btype) {
   case 0:
     break;
   case 1:
     regfile[31]=pc;
-    pc=instruction->fields.imm;
+    pc=instruction->aluout;
     break;
   case 2:
-    pc=regfile[instruction->sourcereg];
+    pc=instruction->aluout;
     break;
   case 3:
-    if (instruction->aluout == 1) 
-      pc+=instruction->fields.imm;
+    /*if (instruction->aluout == 1) 
+      pc+=instruction->fields.imm;*/
+
+    pc = instruction->aluout;
     break;
   default:
     break;
