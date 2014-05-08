@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
   int zapzap=0;
   int setPC;
   while (i<=MAXPC4) {
-
+    
     writeback(w);
     memory(m);
     execute(x);
@@ -73,18 +73,18 @@ int main(int argc, char *argv[])
     int frt = d->targetreg;
     int dBType = f->signals.btype;
     int zapped;
+    int zapper;
     //if (zapzap == 2) {
       
     //}
     if (zapzap == 1) {
-      *w = *m;
-      *m = *x;
-      *x =*d;
-      *d = *nop;
-      //i++;
-      //k++;
+	  //  zapzap++; }
+      //  if (zapzap == 2) {
+      //      *w = *m;
+      //*m = *x;
+      //*x =*d;
+      //*d = *f;
       printf("IN XAAPZAP\n");
-      //pc = setPC;
       zapzap=0;
       zapped = 1;
     }
@@ -93,11 +93,12 @@ int main(int argc, char *argv[])
     if (dBType == 1 || dBType ==2 || dBType == 3) {
       if (guessedNotTaken != d->aluout) {
 	zapzap=1;
+	//zapped = 0;
 	int setPC = d->aluout;
 	//setPCWithInfo(d);
       }
-    } 
-
+    }
+    
     printf("PC %d , setPC: %d \n", pc, setPC);
     printf("ZAPZAP %d btype %d \n",zapzap, dBType);//zapzap);
     
@@ -174,32 +175,17 @@ int main(int argc, char *argv[])
     default:
       break;
     }
-    //printf("D inputs: %d %d\n", d->input1, d->input2);
-    // decode(d);
-    //writeback(w); 
-    // memory(m);
-    //decode(d);
-    // execute(x);
-    //decode(d);
-    //memory(m);
-    //setPCWithInfo(w);  
-    //printP2(f,d,x,m,w,instnum++); 
+
     i++;
-    //d->input1=
-    //printf("D inputs: %d %d\n", d->input1, d->input2);
-    //decode(d);
-    /*if (dBType == 1 || dBType ==2) {
-      
-      i--;
-      k++;
-      setPCWithInfo(d);
-    }*/     
-    //else {
-    //    if (dBType == 0) {
-    if (nopnop== 0){// & zapzap != 1)  { 
+
+    if (nopnop== 0) {// && zapped != 1)  { 
       printf("NO NOP!\n");
-      if (zapzap==0)
+      // if (zapzap==0)
 	*w=*m; *m=*x; *x=*d; *d=*f;
+	if (zapped ==1) {
+	  d=nop;
+	  zapper = 1;
+	}
     }
     else {
       //printf("NO NOP\n");
@@ -211,11 +197,7 @@ int main(int argc, char *argv[])
       k++;
       pc--;
     }
-    //}
-    // if (zapped ==1) {
-    //pc = setPC;
-    //}
-    //}
+
     if (i <= maxpc){// && dBType ==0) {
       fetch(f);
       decode(f);
@@ -224,7 +206,9 @@ int main(int argc, char *argv[])
       *f = *n;
     }
     nopnop = 0;
-    //    zapzap=0;
+    //if (zapzap == 1 and zapped = 1) {
+    zapped=0;
+    //}
   }
   printf("Cycles: %d\nInstructions Executed: %d\n", i+k, maxpc+1);
   free(d);  free(x);  free(m);  free(w);  free(n); free(f);
