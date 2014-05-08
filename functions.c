@@ -235,7 +235,7 @@ void decode(InstInfo *instruction)
       instruction->destreg = -1;//instruction->fields.rd;
       instruction->targetreg = instruction->fields.rt;
       instruction->input2=instruction->s2data;
-
+      
       int k ;
     // changed condition to decode
       if (instruction->input1 < instruction->input2) {
@@ -243,8 +243,8 @@ void decode(InstInfo *instruction)
 	instruction->aluout =pc +  instruction->fields.imm; }
       else {
 	instruction->aluout = pc+1;
-	k = instruction->fields.imm+pc;
-	printf("blt with value of %d, as opposed to %d\n", instruction->aluout, k); }
+	k = instruction->fields.imm+pc;}
+      printf("blt with value of %d, as opposed to %d\n", instruction->aluout, k); 
       break;
     default:
       break;
@@ -340,6 +340,7 @@ void memory(InstInfo *instruction)
   switch(instruction->signals.mtr) {
   case(0):
     instruction->destdata=instruction->aluout;// regfile[instruction->destreg]=instruction->aluout;
+    printf("INMOM: %d", instruction->aluout);
     break;
   case(1): //load word
     instruction->destdata=regfile[instruction->destreg];//instruction->memout;

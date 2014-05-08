@@ -43,107 +43,74 @@ int main(int argc, char *argv[])
   int nopnop=0; 
   int MAXPC4 = maxpc + 4;
   int k = 0;
-  int predictionCorrect = 0;
+  int zapzap=0;
+  int setPC;
   while (i<=MAXPC4) {
-    //   predictionCorrec
-    //decode(d);
-    //writeback(w); 
-    //decode(d);
-    //execute(x);
-    // memory(m);
-    //setPCWithInfo(w);  
-    //printP2(f,d,x,m,w,instnum++); 
-    //i++;
-
 
     writeback(w);
     memory(m);
     execute(x);
     decode(d);
-    execute(d);
-    int dBType = d->signals.btype;
-    int guessPC = pc+1;
-    printf("btye: %d\n", dBType);
-    if (dBType > 0) { 
-      if (d->aluout == guessPC) {
-	predictionCorrect = 1;
-	printf("BRANCHING");
-	printf(" nextPC: %d pcvalue: %d\n", guessPC, d->aluout);
-      }
-      else {
-	predictionCorrect = 0;
-	printf("NOT BRANCHING\n");
-      }
-    }
-    //printf(" nextPC: %d pcvalue: %d\n", guessPC); 
-    
-    
     setPCWithInfo(w);  
     printP2(f,d,x,m,w,instnum++); 
 
-
-
-    
-    //    if (guessPC == 0) {
-
-
+    printf("-------------------------------------------------\n");
+    //printf("PC %d \n", pc);
     int memoryResult = m->memout;//w->memout;
     int executeResult=x->aluout;
     int forwardA=0, forwardB=0;
     int xRegWrite = x->signals.rw;
     int mRegWrite = m->signals.rw;
     int wRegWrite = m->signals.rw;
-    //    int dBType = d->signals.btype;
     int wrd = w->destreg;
     int mrd = m->destreg;
     int xrd = x->destreg;
     int drs = d->sourcereg;
     int drt = d->targetreg;
-    int dmr = d->signals.mr;
-    int drd = d->destreg;
-    int frs = f->sourcereg;
-    int frt = f->targetreg;
-    if (dBType != 0) {
-      if (dmr == 1 && ( drd == frs || drd ==frt) ) {
-	nopnop = 1;
-	//printf("SETTING NOPNOP! %d\n", nopnop);
-      } 
-    }
-    
-
-    /*    int memoryResult = m->memout;//w->memout;
-    int executeResult=x->aluout;
-    int forwardA=0, forwardB=0;
-    int xRegWrite = x->signals.rw;
-    int mRegWrite = m->signals.rw;
-    int wRegWrite = m->signals.rw;
-    int wrd = w->destreg;
-    int mrd = m->destreg;
-    int xrd = x->destreg;
-    int drs = d->sourcereg;
-    int drt = d->targetreg;*/
-    else {
-      dmr = x->signals.mr;
-      drd = x->destreg;
-      frs = d->sourcereg;
-      frt = d->targetreg;
-      // int k = 0;
+    int dmr = x->signals.mr;
+    int drd = x->destreg;
+    int frs = d->sourcereg;
+    int frt = d->targetreg;
+    int dBType = f->signals.btype;
+    int zapped;
+    //if (zapzap == 2) {
       
-      //printf("memorytest %d\n", memoryResult);
-      if (dmr == 1 && ( drd == frs || drd ==frt) ) {
-	nopnop = 1;
-	//printf("SETTING NOPNOP! %d\n", nopnop);
+    //}
+    if (zapzap == 1) {
+      *w = *m;
+      *m = *x;
+      *x =*d;
+      *d = *nop;
+      //i++;
+      //k++;
+      printf("IN XAAPZAP\n");
+      //pc = setPC;
+      zapzap=0;
+      zapped = 1;
+    }
+    //    int zapped = 1;
+    int guessedNotTaken = pc+1;
+    if (dBType == 1 || dBType ==2 || dBType == 3) {
+      if (guessedNotTaken != d->aluout) {
+	zapzap=1;
+	int setPC = d->aluout;
+	//setPCWithInfo(d);
       }
-      else {
-	//printf("NOT SETTING NOPNOP %d\n", nopnop);
-      }    
+    } 
+
+    printf("PC %d , setPC: %d \n", pc, setPC);
+    printf("ZAPZAP %d btype %d \n",zapzap, dBType);//zapzap);
+    
+    // int k = 0;
+
+    //printf("memorytest %d\n", memoryResult);
+    if (dmr == 1 && ( drd == frs || drd ==frt) ) {
+      nopnop = 1;
+      //printf("SETTING NOPNOP! %d\n", nopnop);
     }
-    //*/if (guessPC == 0) {
-    //int dmr = d->signals.mr;
-    // int drd = d->destreg;
-    //int frs = f->sourcereg;
-    // int frt = f->targetreg;
-      
+    else {
+      //printf("NOT SETTING NOPNOP %d\n", nopnop);
+    }    
     if (wRegWrite == 1 && wrd != 0 && (wrd == drs)) { 
       forwardA=3; 
       
@@ -151,31 +118,31 @@ int main(int argc, char *argv[])
     }
     else {
       if (mRegWrite == 1 && mrd !=0 && (mrd == drs)) {
-	forwardA= 1;
-	//printf("1a %d \n", memoryResult);//regfile[mrd]);
+    forwardA= 1;
+    //printf("1a %d \n", memoryResult);//regfile[mrd]);
       }
       else {
-	if (xRegWrite == 1 && xrd !=0 && (xrd==drs)) {
-	  //printf("2a %d \n", regfile[xrd]);
-	  forwardA = 2;
-	}
+    if (xRegWrite == 1 && xrd !=0 && (xrd==drs)) {
+      //printf("2a %d \n", regfile[xrd]);
+      forwardA = 2;
+    }
       }
     }
-  
+    
     if (wRegWrite == 1 && wrd != 0 && (wrd == drt)) { 
       forwardB=3; 
       //printf("3b  %d \n", regfile[wrd]);
     }
     else {
       if (mRegWrite == 1 && mrd !=0 && (mrd == drt)) {
-	//printf("1b %d \n", regfile[mrd]);
-	forwardB= 1;
+    //printf("1b %d \n", regfile[mrd]);
+    forwardB= 1;
       }
       else {
-	if (xRegWrite == 1 && xrd !=0 && (xrd==drt)) {
-	  forwardB = 2;
-	  //printf("2b  %d \n", regfile[xrd]);
-	}
+    if (xRegWrite == 1 && xrd !=0 && (xrd==drt)) {
+      forwardB = 2;
+      //printf("2b  %d \n", regfile[xrd]);
+    }
       }
     }
     
@@ -221,7 +188,21 @@ int main(int argc, char *argv[])
     //d->input1=
     //printf("D inputs: %d %d\n", d->input1, d->input2);
     //decode(d);
-    if (nopnop==1 || ( predictionCorrect == 0 && dBType>0)) {     //printf("NO NOP\n"
+    /*if (dBType == 1 || dBType ==2) {
+      
+      i--;
+      k++;
+      setPCWithInfo(d);
+    }*/     
+    //else {
+    //    if (dBType == 0) {
+    if (nopnop== 0){// & zapzap != 1)  { 
+      printf("NO NOP!\n");
+      if (zapzap==0)
+	*w=*m; *m=*x; *x=*d; *d=*f;
+    }
+    else {
+      //printf("NO NOP\n");
       *w = *m;
       *m = *x;
       *x = *nop;
@@ -229,16 +210,13 @@ int main(int argc, char *argv[])
       i--;
       k++;
       pc--;
-
-      printf("nopped\n");
     }
-    else {
-      //printf("NOPNOP!\n");
-      *w=*m; *m=*x; *x=*d; *d=*f;
-    }
-    
-    //setPCWithInfo(w);  
-    if (i <= maxpc) {
+    //}
+    // if (zapped ==1) {
+    //pc = setPC;
+    //}
+    //}
+    if (i <= maxpc){// && dBType ==0) {
       fetch(f);
       decode(f);
     }
@@ -246,6 +224,7 @@ int main(int argc, char *argv[])
       *f = *n;
     }
     nopnop = 0;
+    //    zapzap=0;
   }
   printf("Cycles: %d\nInstructions Executed: %d\n", i+k, maxpc+1);
   free(d);  free(x);  free(m);  free(w);  free(n); free(f);
